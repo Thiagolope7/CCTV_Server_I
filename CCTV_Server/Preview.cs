@@ -489,7 +489,7 @@ namespace CCTV_Server
             this.pnlBase.Controls.Add(this.btnBase);
             this.pnlBase.Controls.Add(this.lblNombreBase);
             this.pnlBase.Controls.Add(this.lblStaBase);
-            this.pnlBase.Location = new System.Drawing.Point(750, 383);
+            this.pnlBase.Location = new System.Drawing.Point(907, 518);
             this.pnlBase.Name = "pnlBase";
             this.pnlBase.Size = new System.Drawing.Size(300, 28);
             this.pnlBase.TabIndex = 39;
@@ -521,7 +521,7 @@ namespace CCTV_Server
             // 
             this.lblNombreBase.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblNombreBase.ForeColor = System.Drawing.Color.Gray;
-            this.lblNombreBase.Location = new System.Drawing.Point(38, 3);
+            this.lblNombreBase.Location = new System.Drawing.Point(39, 4);
             this.lblNombreBase.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.lblNombreBase.Name = "lblNombreBase";
             this.lblNombreBase.Size = new System.Drawing.Size(193, 18);
@@ -1052,6 +1052,22 @@ namespace CCTV_Server
             //   // .Show("Sender:" + sender.ToString() + "  Tag:" + btnPisado.Tag);
             log.Info("Preset " + btnPisado.Tag.ToString());
             int iChannel = int.Parse(btnPisado.Tag.ToString()) + 1;
+            labels[2, int.Parse(btnPisado.Tag.ToString())].Text = "0";
+            int codigo = 0;
+            string query = "UPDATE [COVIANDES_ADAP_NKF].[dbo].[CAM_EQUIVALENCIA] SET BANDERA=0, CONTEO=0 WHERE CANAL=" + iChannel.ToString();// Preset 1 // Button = 0..79
+            Conexion.Open();
+            SqlCommand comando2 = new SqlCommand(query, Conexion);
+            comando2.ExecuteNonQuery();
+            query = "select codigo_hermes from [COVIANDES_ADAP_NKF].[dbo].[CAM_EQUIVALENCIA] WHERE CANAL=" + iChannel.ToString();
+            comando2.CommandText = query;
+            SqlDataReader dr = comando2.ExecuteReader();
+            while (dr.Read())
+            {
+                codigo = dr.GetInt32(0);
+            }
+            Conexion.Close();
+            Citilog.mover_home(codigo);
+
             if (!CHCNetSDK.NET_DVR_PTZPreset_Other(m_lUserID, iChannel, CHCNetSDK.GOTO_PRESET, 1))
             {
                 iLastErr = CHCNetSDK.NET_DVR_GetLastError();
@@ -1070,7 +1086,7 @@ namespace CCTV_Server
         {
             labelClock.Text = DateTime.Now.ToString("HH:mm:ss");
         }
-public bool[] Bandera_citi = new bool[80];
+        public bool[] Bandera_citi = new bool[80];
         private void tmr20s_Tick(object sender, EventArgs e)
         {
             try
@@ -1087,21 +1103,21 @@ public bool[] Bandera_citi = new bool[80];
                 DataTable dt = new DataTable();
                 dt.Load(dr);
                 Conexion.Close();
-                
-               
+
+
 
                 string s = "";
                 //while (dr.Read())
-                for (int i =0; i < dt.Rows.Count; i++)
+                for (int i = 0; i < dt.Rows.Count; i++)
                 {
                     //               log.Info("se apaga el panel " + dr.GetString(dr.GetOrdinal("O2")));
-                    s += dt.Rows[i][0].ToString() ;
+                    s += dt.Rows[i][0].ToString();
                     int iIdCode = Convert.ToInt32(dt.Rows[i][0].ToString()) - 1;  // CANAL = 1..80
-                    int iBand = Convert.ToInt32(dt.Rows[i][1].ToString()) ;        // BANDERA
+                    int iBand = Convert.ToInt32(dt.Rows[i][1].ToString());        // BANDERA
                     int iCont = Convert.ToInt32(dt.Rows[i][2].ToString());        // CUENTA 
                     try
                     {
-                     if (iCont > 0)
+                        if (iCont > 0)
                         {
                             if (Bandera_citi[i] == false)
                             {
@@ -1111,23 +1127,30 @@ public bool[] Bandera_citi = new bool[80];
                                 //enviamos ptz a citilog
                             }
                         }
-                        if ((iIdCode >= 0) && (iIdCode < 80))
-                            labels[2, iIdCode].Text = iCont.ToString();
 
-                        PtzBandera[iIdCode] = iBand;
-                        // Verificar las banderas
-                        if (iBand == 1)
+                        if ((iIdCode >= 0) && (iIdCode < 80))
                         {
-                            log.Info(iIdCode.ToString());
-                            if ((iIdCode >= 0) && (iIdCode < 80))
-                                labels[2, iIdCode].Text = "0";
-                            buttons[iIdCode].PerformClick();
-                            query = "UPDATE [COVIANDES_ADAP_NKF].[dbo].[CAM_EQUIVALENCIA] SET BANDERA=0 WHERE CANAL=" + (iIdCode + 1).ToString();// Preset 1 // Button = 0..79
-                            comando2.CommandText = query;
-                            comando2.ExecuteNonQuery();
-                            log.Info("Se entrada de conteo a Citilog de la Cara " + iIdCode);
-                            Citilog.mover_home(dr.GetInt32(3));
-                            //ENVIAMOS CONFIRMACION A CITILOG
+                            labels[2, iIdCode].Text = iCont.ToString();
+                            labels[2, iIdCode].Refresh();
+
+                            PtzBandera[iIdCode] = iBand;
+                            // Verificar las banderas
+                            if (iBand == 1)
+                            {
+                                log.Info(iIdCode.ToString());
+                                if ((iIdCode >= 0) && (iIdCode < 80))
+                                    labels[2, iIdCode].Text = "0";
+
+                                query = "UPDATE [COVIANDES_ADAP_NKF].[dbo].[CAM_EQUIVALENCIA] SET BANDERA=0 WHERE CANAL=" + (iIdCode + 1).ToString();// Preset 1 // Button = 0..79
+                                Conexion.Open();
+                                comando2.CommandText = query;
+                                comando2.ExecuteNonQuery();
+                                log.Info("Se entrada de conteo a Citilog de la Camara " + iIdCode);
+                                Citilog.mover_home(Convert.ToInt32(dt.Rows[i][3].ToString()));
+                                Conexion.Close();
+                                Bandera_citi[i] = false;
+                                buttons[iIdCode].PerformClick();//ENVIAMOS CONFIRMACION A CITILOG
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -1289,7 +1312,7 @@ public bool[] Bandera_citi = new bool[80];
                 {
                     iLastErr = CHCNetSDK.NET_DVR_GetLastError();
                     str = "NET_DVR_StopGetFile failed, error code= " + iLastErr; //Download controlling failed,print error code
-                 //   // .Show(str);
+                                                                                 //   // .Show(str);
                     return;
                 }
                 m_lDownHandle = -1;
@@ -1350,10 +1373,10 @@ public bool[] Bandera_citi = new bool[80];
                 for (int i = 0; i < dt.Rows.Count; i++)
 
                 {
-                    
+
                     log.Info("Descargando video incidente " + dt.Rows[i][3] + " cámara " + dt.Rows[i][8] + " tipo " + dt.Rows[i][6]);
                     int canal = Convert.ToInt32(dt.Rows[i][9].ToString());
-                    tomarVideo(dt.Rows[i][3].ToString(),canal,dt.Rows[i][6].ToString());
+                    tomarVideo(dt.Rows[i][3].ToString(), canal, dt.Rows[i][6].ToString());
                     query = @"INSERT INTO MEDELLIN_HIST..VIDEOS_DAI
            ([INCIDENTE]
            ,[CANAL]
@@ -1414,87 +1437,7 @@ public bool[] Bandera_citi = new bool[80];
                 nombres[i] = dr.GetString(1);
                 i++;
             }
-            //nombres[0] = "Cr 72B Cl 73 - Pilarica";
-            //nombres[1] = "Cr 63A Cl 103 - Quebrada Tinajas";
-            //nombres[2] = "Cr 64C Cl 111 B - Feria de Ganado";
-            //nombres[3] = "Cr 63 Cl 77 - Puente del Mico";
-            //nombres[4] = "Trv 78 Cr 65 - Castipan";
-            //nombres[5] = "Cr 43A Cl 12 Sur - Virgen Aguac.";
-            //nombres[6] = "Cr 62 Cl 58 - Pte. Horacio Toro";
-            //nombres[7] = "Cr 46 Cl 52 - Playa x Oriental";
-            //nombres[8] = "Cr 37 Cl 47 - Bomberos";
-            //nombres[9] = "Cl 54 Cr 70 - La Iguana";
-            //nombres[10] = "Cr 63 Cl 48 - Suramericana";
-            //nombres[11] = "Av. Boliv Cl 42C - Dep. Musicos";
-            //nombres[12] = "Cl34 Cr 66B- Exito Unicentro";
-            //nombres[13] = "Avenida 80 x Cll 30 Avenida 80";
-            //nombres[14] = "Cr 57 Cl 58A - Fatelares";
-            //nombres[15] = "Cr 70 Cll 14 Aerop Juan Pablo II";
-            //nombres[16] = "Cl 16 Cr 30 - Restaurante Asia";
-            //nombres[17] = "Cl 10A Cr 34 - Hotel 10";
-            //nombres[18] = "Cll 10 Cr 29D Trv Inf Tesoro";
-            //nombres[19] = "Cl 10 Cr 50 - Puente de la 10";
-            //nombres[20] = "Cr 48 Cl 7 - Icollantas";
-            //nombres[21] = "Vivero Cra 50FF Cll 8 Sur Av 80";
-            //nombres[22] = "Cr 52 Cl 8 Sur - Bocad El Caribe";
-            //nombres[23] = "Cr 80 Cl 80 - CAI Lopez de Mesa";
-            //nombres[24] = "25 - No Comunica";
-            //nombres[25] = "Cr 49 Cl 7 Av. Regional - INEM";
-            //nombres[26] = "Cr 49 Cl 7 Sur - Aguacatala";
-            //nombres[27] = "Cr 52 Cl 14 - C.E. Olaya Herrera";
-            //nombres[28] = "Cr 50 Cl 4 - Coltabaco";
-            //nombres[29] = "Cr 50 Cl 14 Autop. Sur - Leonisa";
-            //nombres[30] = "Cr 49 Cl 14 - High Light";
-            //nombres[31] = "Cr 49 Cl 30 - Bancolombia";
-            //nombres[32] = "Cr 48 Cl 18 - Ciudad del Rio";
-            //nombres[33] = "Cll 37 Cra 50 AKT";
-            //nombres[34] = "Cra 38 Cll 26 Urb. Punta Piedra";
-            //nombres[35] = "Cr 64C Cl 78 Terminal Del Norte";
-            //nombres[36] = "Cra 64C Cll 104 Zen?;
-            //nombres[37] = "Cra 64AA Cll 114 A Solla";
-            //nombres[38] = "Cra 64C Cll 97 Parque Juanes";
-            //nombres[39] = "Cra 64C Cll 67 Coca Cola";
-            //nombres[40] = "Cra 22 Cll 16 Chuscalito";
-            //nombres[41] = "Cr 52 Cl 12 Sur - Guayabal";
-            //nombres[42] = "Cra 57 Cll 46 Estacion Cisneros";
-            //nombres[43] = "Cra 38 Cll 9 Sur Cent C Santa Fe";
-            //nombres[44] = "Cra 43C Cll 4 Sur Carulla Oviedo";
-            //nombres[45] = "Av Guayabal Cll 3 Sur Cristo Rey";
-            //nombres[46] = "Trv 39B Cll 33 Glorieta Buleria";
-            //nombres[47] = "Cra 62 Cll 49 Bomberos Libertado";
-            //nombres[48] = "Cra 63A Cll 94 Quebrada Minitas";
-            //nombres[49] = "Cra 48 Cll 20 Clinica Clofan";
-            //nombres[50] = "Cra 83C Cll 33 El Castillo";
-            //nombres[51] = "Cra 89 Cll 44 Everest";
-            //nombres[52] = "Cra 59 Cll 44 Barrio Triste";
-            //nombres[53] = "Cr 63 A Cl 54 Carlos E. Restrepo";
-            //nombres[54] = "Cra 62 Cll 55 Minorista";
-            //nombres[55] = "Cra 47 Cll 58 Villa Nueva";
-            //nombres[56] = "Cr 64C Cll 58 Unv Nacional";
-            //nombres[57] = "Cra 134 Cll 59 Vivero T鷑el Occ";
-            //nombres[58] = "Cra 64C Cll 102 Belalc醶ar";
-            //nombres[59] = "Cra 65 Cll 97 EPS Sura Castilla";
-            //nombres[60] = "Cr 49 Cl 17 Sur - Tugo";
-            //nombres[61] = "Cl 12 Sur Cr 48B Depr Glori Aguc";
-            //nombres[62] = "Cra 65 Cll 71 La Florida";
-            //nombres[63] = "Cr 108BB Cll 62D T鷑el de Occi";
-            //nombres[64] = "Cra 43A Cll 14 Castropol";
-            //nombres[65] = "Cra 48 Cll 16 Sur Ford las Vegas";
-            //nombres[66] = "Cra 50 Cll 6 Sur Colcafe";
-            //nombres[67] = "Cra 42 Cll 31A Angus Brangus";
-            //nombres[68] = "Cra 50 Cll 25 Postobon";
-            //nombres[69] = "Cra 52 Cll 20 Zool骻ico";
-            //nombres[70] = "71 - No Comunica";
-            //nombres[71] = "Cra 64C Cll 89 Tanques Ecopetrol";
-            //nombres[72] = "Cra 50 Cll 30 Puente Guayaquil";
-            //nombres[73] = "74 - No Comunica";
-            //nombres[74] = "75 - No Comunica";
-            //nombres[75] = "76 - No Comunica";
-            //nombres[76] = "77 - No Comunica";
-            //nombres[77] = "Cr 55 C 37 Glorieta Exposiciones";
-            //nombres[78] = "79 - No Comunica";
-            //nombres[79] = "80 - No Comunica";
-            //nombres[80] = "80 - No Comunica";
+
             x = 3;
             y = 5;
             Conexion.Close();
