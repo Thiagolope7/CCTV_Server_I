@@ -17,8 +17,8 @@ namespace CCTV_Server
             }
             catch (SocketException)
             {
-                string texto2 = "<CitiCommand Id=" + '\u0022' + "6" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " PanCommand=" + '\u0022' + "Right" + '\u0022' + "/></CitiCommand>";
-                Preview.log.Info(texto2);
+                //string texto2 = "<CitiCommand Id=" + '\u0022' + "6" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " PanCommand=" + '\u0022' + "Right" + '\u0022' + "/></CitiCommand>";
+                //Preview.log.Info(texto2);
                 //no se conecta con citilog
                 //string  texto1 = @"<CitiCommand Id=""6"" Type=""PtzControl""><PtzControl CameraId=""";
                 // texto1 += id.ToString();
@@ -28,28 +28,29 @@ namespace CCTV_Server
             }
             NetworkStream networkStream = tcpClient.GetStream();
             string texto, conf, mover;
-            while (true)
+            //while (true)
+            //{
+            if (networkStream.CanWrite && networkStream.CanRead)
             {
-                if (networkStream.CanWrite && networkStream.CanRead)
-                {
 
 
-                    texto = "<CitiCommand Id=" + '\u0022' + "6" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " PanCommand=" + '\u0022' + "Right" + '\u0022' + "/></CitiCommand>";
-                    Preview.log.Info(texto);
-                    Byte[] sendBytes = Encoding.ASCII.GetBytes(texto);
-                    //networkStream.Write(sendBytes, 0, sendBytes.Length);
-                }
-                else if (!networkStream.CanRead)
-                {
-                    
-                    tcpClient.Close();
-                }
-                else if (!networkStream.CanWrite)
-                {
-                   
-                    tcpClient.Close();
-                }
+                texto = "<CitiCommand Id=" + '\u0022' + "1" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " PanCommand=" + '\u0022' + "Right" + '\u0022' + "/></CitiCommand>";
+                Preview.log.Info(texto);
+                Byte[] sendBytes = Encoding.ASCII.GetBytes(texto);
+                networkStream.Write(sendBytes, 0, sendBytes.Length);
             }
+            else if (!networkStream.CanRead)
+            {
+
+                tcpClient.Close();
+            }
+            else if (!networkStream.CanWrite)
+            {
+
+                tcpClient.Close();
+            }
+            tcpClient.Close();
+            //}
         }
         public static void mover_home(int id)
         {
@@ -65,28 +66,29 @@ namespace CCTV_Server
             }
             NetworkStream networkStream = tcpClient.GetStream();
             string texto, conf, mover;
-            while (true)
+            //while (true)
+            //{
+            if (networkStream.CanWrite && networkStream.CanRead)
             {
-                if (networkStream.CanWrite && networkStream.CanRead)
-                {
 
-                    texto = "<CitiCommand Id=" + '\u0022' + "1" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " GotoPreset=" + '\u0022' + "1" + '\u0022' + "/></CitiCommand>";
-                    
-                    Byte[] sendBytes = Encoding.ASCII.GetBytes(texto);
-                    networkStream.Write(sendBytes, 0, sendBytes.Length);
-                }
-                else if (!networkStream.CanRead)
-                {
-
-                    tcpClient.Close();
-                }
-                else if (!networkStream.CanWrite)
-                {
-
-                    tcpClient.Close();
-                }
-
+                texto = "<CitiCommand Id=" + '\u0022' + "1" + '\u0022' + " Type=" + '\u0022' + "PtzControl" + '\u0022' + "><PtzControl CameraId=" + '\u0022' + id.ToString() + '\u0022' + " CameraName=" + '\u0022' + "ALL" + '\u0022' + " GotoPreset=" + '\u0022' + "1" + '\u0022' + "/></CitiCommand>";
+                Preview.log.Info(texto);
+                Byte[] sendBytes = Encoding.ASCII.GetBytes(texto);
+                networkStream.Write(sendBytes, 0, sendBytes.Length);
             }
+            else if (!networkStream.CanRead)
+            {
+
+                tcpClient.Close();
+            }
+            else if (!networkStream.CanWrite)
+            {
+
+                tcpClient.Close();
+            }
+            tcpClient.Close();
+
+            //}
         }
     }
 }
