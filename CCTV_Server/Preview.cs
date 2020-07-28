@@ -1067,6 +1067,7 @@ namespace CCTV_Server
             }
             Conexion.Close();
             Citilog.mover_home(codigo);
+            Bandera_citi[iChannel-1]= false;
 
             if (!CHCNetSDK.NET_DVR_PTZPreset_Other(m_lUserID, iChannel, CHCNetSDK.GOTO_PRESET, 1))
             {
